@@ -5,6 +5,9 @@
     
     Copyright (c) 2026
     
+    Arab American University - Ramallah Campus
+    Instructor: Dr. Eman Naser
+    
     Developed by:
         - Omar Jaber
         - Yazan Aydi
@@ -30,139 +33,691 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar System - Enhanced WebGL</title>
+    <title>Realistic Solar System Simulation - WebGL</title>
+    
+    <!-- Google Fonts - Futuristic Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
             background: #000;
-            font-family: Arial, sans-serif;
+            font-family: 'Rajdhani', sans-serif;
         }
+        
         canvas {
             display: block;
             width: 100vw;
             height: 100vh;
         }
-        #info {
+        
+        /* Futuristic HUD Container */
+        .hud-panel {
             position: absolute;
+            background: linear-gradient(135deg, 
+                rgba(10, 15, 40, 0.85) 0%, 
+                rgba(20, 30, 60, 0.85) 50%,
+                rgba(15, 25, 50, 0.85) 100%);
+            backdrop-filter: blur(15px) saturate(180%);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.8),
+                inset 0 1px 1px rgba(255, 255, 255, 0.1),
+                0 0 20px rgba(0, 150, 255, 0.2);
+            border-radius: 15px;
+            color: #e8f4ff;
+            animation: panelSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: all 0.3s ease;
+        }
+        
+        .hud-panel:hover {
+            border-color: rgba(0, 200, 255, 0.6);
+            box-shadow: 
+                0 12px 48px rgba(0, 0, 0, 0.9),
+                inset 0 1px 1px rgba(255, 255, 255, 0.15),
+                0 0 30px rgba(0, 150, 255, 0.4);
+        }
+        
+        @keyframes panelSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes neonPulse {
+            0%, 100% { text-shadow: 0 0 10px rgba(0, 200, 255, 0.8), 0 0 20px rgba(0, 150, 255, 0.4); }
+            50% { text-shadow: 0 0 20px rgba(0, 200, 255, 1), 0 0 30px rgba(0, 150, 255, 0.6); }
+        }
+        
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 200, 255, 0.3), inset 0 0 10px rgba(0, 200, 255, 0.1); }
+            50% { box-shadow: 0 0 20px rgba(0, 200, 255, 0.5), inset 0 0 15px rgba(0, 200, 255, 0.2); }
+        }
+        
+        .hidden {
+            opacity: 0 !important;
+            pointer-events: none;
+            transform: translateY(-30px) !important;
+        }
+        
+        /* Futuristic Toggle Buttons */
+        .toggle-btn {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, rgba(0, 200, 255, 0.2), rgba(0, 100, 200, 0.2));
+            border: 2px solid rgba(0, 200, 255, 0.5);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            backdrop-filter: blur(10px);
+            box-shadow: 
+                0 5px 20px rgba(0, 0, 0, 0.5),
+                0 0 15px rgba(0, 200, 255, 0.3);
+            animation: glowPulse 2s ease-in-out infinite;
+            z-index: 1000;
+        }
+        
+        .toggle-btn:hover {
+            transform: scale(1.15) rotate(90deg);
+            border-color: rgba(0, 255, 200, 0.8);
+            background: linear-gradient(135deg, rgba(0, 255, 200, 0.3), rgba(0, 150, 255, 0.3));
+            box-shadow: 
+                0 8px 30px rgba(0, 0, 0, 0.7),
+                0 0 30px rgba(0, 255, 200, 0.6);
+        }
+        
+        .toggle-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .toggle-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: #00d4ff;
+            filter: drop-shadow(0 0 5px rgba(0, 200, 255, 0.8));
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-btn:hover svg {
+            fill: #00ff88;
+            filter: drop-shadow(0 0 10px rgba(0, 255, 136, 1));
+        }
+        
+        #toggleInfo {
+            top: 20px;
+            left: 380px;
+        }
+        
+        #toggleControls {
+            top: 20px;
+            right: 330px;
+        }
+        
+        #toggleCopyright {
+            bottom: 20px;
+            right: 350px;
+        }
+        
+        #hudToggle {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, rgba(255, 0, 100, 0.3), rgba(200, 0, 255, 0.3));
+            border: 3px solid rgba(255, 0, 200, 0.6);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 12px;
+            color: #ff00ff;
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.8);
+            animation: glowPulse 2s ease-in-out infinite;
+        }
+        
+        #hudToggle:hover {
+            transform: translateY(-50%) scale(1.2);
+            background: linear-gradient(135deg, rgba(255, 0, 100, 0.5), rgba(200, 0, 255, 0.5));
+            border-color: rgba(255, 0, 200, 1);
+            box-shadow: 
+                0 10px 40px rgba(0, 0, 0, 0.8),
+                0 0 40px rgba(255, 0, 200, 0.8);
+        }
+        
+        /* Planet Tracker Dropdown */
+        #planetTracker {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1000;
+        }
+        
+        #planetSelect {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, rgba(0, 50, 100, 0.8), rgba(0, 100, 150, 0.6));
+            border: 2px solid rgba(0, 200, 255, 0.6);
+            border-radius: 15px;
+            color: #00ffcc;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            backdrop-filter: blur(15px);
+            box-shadow: 
+                0 5px 25px rgba(0, 0, 0, 0.6),
+                0 0 15px rgba(0, 200, 255, 0.3);
+            transition: all 0.3s ease;
+            outline: none;
+            min-width: 180px;
+        }
+        
+        #planetSelect:hover {
+            border-color: rgba(0, 255, 200, 1);
+            box-shadow: 
+                0 8px 35px rgba(0, 0, 0, 0.8),
+                0 0 30px rgba(0, 255, 200, 0.5);
+        }
+        
+        #planetSelect option {
+            background: #001a33;
+            color: #00ffcc;
+            padding: 10px;
+        }
+        
+        #trackingStatus {
+            padding: 8px 15px;
+            background: linear-gradient(135deg, rgba(0, 100, 50, 0.6), rgba(0, 150, 100, 0.4));
+            border: 1px solid rgba(0, 255, 100, 0.4);
+            border-radius: 10px;
+            color: #00ff88;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        #trackingStatus.tracking {
+            background: linear-gradient(135deg, rgba(255, 100, 0, 0.6), rgba(255, 150, 50, 0.4));
+            border-color: rgba(255, 200, 0, 0.6);
+            color: #ffcc00;
+            animation: glowPulse 1.5s ease-in-out infinite;
+        }
+        
+        /* Loading Screen */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #000428 0%, #004e92 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        
+        #loadingScreen.loaded {
+            opacity: 0;
+            transform: scale(1.1);
+            pointer-events: none;
+        }
+        
+        .loader {
+            width: 100px;
+            height: 100px;
+            border: 4px solid rgba(0, 200, 255, 0.1);
+            border-top: 4px solid #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            box-shadow: 0 0 40px rgba(0, 200, 255, 0.5);
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #loadingScreen h2 {
+            margin-top: 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            color: #00d4ff;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            animation: neonPulse 2s ease-in-out infinite;
+        }
+        
+        #loadingScreen p {
+            margin-top: 15px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            color: #66b3ff;
+            letter-spacing: 2px;
+        }
+        
+        #loadingProgress {
+            margin-top: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: #00ff88;
+        }
+        
+        /* Futuristic Corner Decorations */
+        .hud-panel::before,
+        .hud-panel::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #00d4ff;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+        
+        .hud-panel::before {
             top: 10px;
             left: 10px;
-            color: white;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+            border-right: none;
+            border-bottom: none;
         }
-        #info h3 {
-            margin: 0 0 10px 0;
-            color: #ffd700;
-        }
-        #copyright {
-            position: absolute;
+        
+        .hud-panel::after {
             bottom: 10px;
             right: 10px;
-            color: white;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 12px 15px;
-            border-radius: 8px;
-            font-size: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            text-align: right;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+            border-left: none;
+            border-top: none;
         }
-        #copyright h4 {
-            margin: 0 0 8px 0;
+        
+        .hud-panel:hover::before,
+        .hud-panel:hover::after {
+            opacity: 1;
+            box-shadow: 0 0 10px rgba(0, 200, 255, 0.8);
+        }
+        
+        /* Scanline effect */
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(0, 200, 255, 0.3) 50%, 
+                transparent 100%);
+            animation: scanline 4s linear infinite;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        #info {
+            top: 20px;
+            left: 20px;
+            padding: 25px;
+            max-width: 340px;
             font-size: 13px;
-            font-weight: bold;
-            color: #ffd700;
         }
+        
+        #info h3 {
+            margin: 0 0 20px 0;
+            color: #00d4ff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 2px solid rgba(0, 200, 255, 0.4);
+            padding-bottom: 12px;
+            animation: neonPulse 3s ease-in-out infinite;
+        }
+        
+        #info h4 {
+            margin: 18px 0 10px 0;
+            color: #00d4ff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            padding-left: 15px;
+        }
+        
+        #info h4:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: #00d4ff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 200, 255, 0.8);
+        }
+        
+        #info p {
+            margin: 8px 0;
+            line-height: 1.7;
+            color: #c8e6ff;
+            font-size: 13px;
+            padding-left: 15px;
+            transition: all 0.2s ease;
+        }
+        
+        #info p:hover {
+            color: #fff;
+            padding-left: 20px;
+        }
+        
+        #info strong {
+            color: #00d4ff;
+            font-weight: 600;
+        }
+        #copyright {
+            bottom: 20px;
+            right: 20px;
+            padding: 25px;
+            text-align: right;
+            min-width: 300px;
+            font-size: 12px;
+        }
+        
+        #copyright h4 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            font-weight: 700;
+            color: #00d4ff;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border-bottom: 2px solid rgba(0, 200, 255, 0.4);
+            padding-bottom: 10px;
+        }
+        
         #copyright p {
-            margin: 3px 0;
-            line-height: 1.4;
+            margin: 6px 0;
+            line-height: 1.6;
+            color: #c8e6ff;
+            font-size: 13px;
+        }
+        
+        #copyright .institution {
+            color: #00d4ff;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 8px 0;
+            text-shadow: 0 0 10px rgba(0, 200, 255, 0.5);
+        }
+        
+        #copyright .instructor {
+            color: #66e0ff;
+            font-style: italic;
+            font-size: 13px;
+            margin: 6px 0;
+        }
+        
+        #copyright strong {
+            color: #00d4ff;
+            font-family: 'Orbitron', sans-serif;
         }
         #controls {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: white;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
-            min-width: 200px;
+            top: 20px;
+            right: 20px;
+            padding: 25px;
+            min-width: 280px;
+            font-size: 13px;
         }
+        
         #controls h4 {
-            margin: 0 0 10px 0;
-            color: #ffd700;
-            font-size: 15px;
+            margin: 0 0 20px 0;
+            color: #00d4ff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border-bottom: 2px solid rgba(0, 200, 255, 0.4);
+            padding-bottom: 10px;
+            animation: neonPulse 3s ease-in-out infinite;
         }
-        #speedSlider {
-            width: 100%;
-            margin: 10px 0;
-            cursor: pointer;
-        }
-        #speedValue {
-            color: #ffd700;
-            font-weight: bold;
-        }
+        
         .control-group {
-            margin: 8px 0;
+            margin: 18px 0;
         }
+        
         .control-label {
             display: block;
-            margin-bottom: 5px;
-            font-size: 12px;
-            color: #ccc;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: #c8e6ff;
+            font-weight: 500;
+        }
+        
+        #speedValue {
+            color: #00ff88;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            text-shadow: 0 0 15px rgba(0, 255, 136, 0.8);
+            display: inline-block;
+            min-width: 60px;
+        }
+        
+        /* Custom Futuristic Slider */
+        #speedSlider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 10px;
+            background: linear-gradient(90deg, 
+                rgba(0, 100, 200, 0.3) 0%,
+                rgba(0, 200, 255, 0.3) 50%,
+                rgba(0, 255, 136, 0.3) 100%);
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        #speedSlider:hover {
+            background: linear-gradient(90deg, 
+                rgba(0, 100, 200, 0.5) 0%,
+                rgba(0, 200, 255, 0.5) 50%,
+                rgba(0, 255, 136, 0.5) 100%);
+            box-shadow: 
+                inset 0 2px 5px rgba(0, 0, 0, 0.5),
+                0 0 15px rgba(0, 200, 255, 0.3);
+        }
+        
+        #speedSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
+            cursor: pointer;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 0 20px rgba(0, 200, 255, 0.8),
+                0 4px 10px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease;
+        }
+        
+        #speedSlider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 
+                0 0 30px rgba(0, 200, 255, 1),
+                0 6px 15px rgba(0, 0, 0, 0.7);
+        }
+        
+        #speedSlider::-webkit-slider-thumb:active {
+            transform: scale(0.95);
+        }
+        
+        #speedSlider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
+            cursor: pointer;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 0 20px rgba(0, 200, 255, 0.8),
+                0 4px 10px rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
 <body>
-    <canvas id="glCanvas"></canvas>
-    
-    <div id="info">
-        <h3>🌌 Realistic Solar System</h3>
-        <p><strong>Controls:</strong></p>
-        <p>🖱️ Mouse: Rotate view</p>
-        <p>🔄 Scroll: Zoom in/out</p>
-        <p>⌨️ Arrow keys: Pan camera</p>
-        <p><strong>Realistic Physics:</strong></p>
-        <p>🔄 Elliptical orbits (Kepler's 1st Law)</p>
-        <p>⚡ Variable speeds (Kepler's 2nd Law)</p>
-        <p>🌍 Counter-clockwise prograde motion</p>
-        <p>🌙 Natural satellites & moons</p>
-        <p>💍 Planetary ring systems</p>
-        <p>🚀 Galactic motion (828,000 km/h)</p>
-        <p>💫 3D helical trajectories</p>
+    <!-- Loading Screen -->
+    <div id="loadingScreen">
+        <div class="loader"></div>
+        <h2>Solar System</h2>
+        <p>Initializing Simulation...</p>
+        <p id="loadingProgress">Loading Textures: 0/15</p>
     </div>
     
-    <div id="controls">
-        <h4>⚙️ Animation Speed</h4>
+    <canvas id="glCanvas"></canvas>
+    
+    <!-- Toggle Buttons -->
+    <button class="toggle-btn" id="toggleInfo" title="Toggle Info Panel">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+        </svg>
+    </button>
+    
+    <button class="toggle-btn" id="toggleControls" title="Toggle Speed Control">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            <circle cx="9.5" cy="9.5" r="1.5"/>
+        </svg>
+    </button>
+    
+    <button class="toggle-btn" id="toggleCopyright" title="Toggle Credits">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+    </button>
+    
+    <button class="toggle-btn" id="hudToggle" title="Toggle All HUD">
+        HUD
+    </button>
+    
+    <div id="planetTracker">
+        <select id="planetSelect" title="Select planet to track">
+            <option value="">Overview Mode</option>
+            <option value="Sun">Sun</option>
+            <option value="Mercury">Mercury</option>
+            <option value="Venus">Venus</option>
+            <option value="Earth">Earth</option>
+            <option value="Mars">Mars</option>
+            <option value="Jupiter">Jupiter</option>
+            <option value="Saturn">Saturn</option>
+            <option value="Uranus">Uranus</option>
+            <option value="Neptune">Neptune</option>
+        </select>
+        <span id="trackingStatus">Overview</span>
+    </div>
+
+    <div id="info" class="hud-panel">
+        <h3>Realistic Solar System</h3>
+        
+        <h4>Camera Controls</h4>
+        <p><strong>Mouse Drag:</strong> Rotate view</p>
+        <p><strong>Scroll:</strong> Zoom in/out</p>
+        <p><strong>W/S:</strong> Zoom | <strong>A/D:</strong> Rotate</p>
+        <p><strong>Arrows:</strong> Pan camera</p>
+        <p><strong>R:</strong> Reset | <strong>H:</strong> HUD</p>
+        <p><strong>1-9:</strong> Track Planets (0=Overview)</p>
+        
+        <h4>Astronomical Data</h4>
+        <p>Scale: 1 unit = 0.1 AU</p>
+        <p>Mercury: 0.39 AU, 88 day orbit</p>
+        <p>Venus: 0.72 AU, 225 days</p>
+        <p>Earth: 1.00 AU, 365 days</p>
+        <p>Mars: 1.52 AU, 687 days</p>
+        <p>Jupiter: 5.20 AU, 11.9 years</p>
+        <p>Saturn: 9.58 AU, 29.5 years</p>
+        <p>Uranus: 19.2 AU, 84 years</p>
+        <p>Neptune: 30.1 AU, 165 years</p>
+        
+        <h4>Physics Simulation</h4>
+        <p>Kepler's Laws (Elliptical Orbits)</p>
+        <p>17 Natural Satellites</p>
+        <p>Galactic Motion 828,000 km/h</p>
+        <p>3D Helical Trajectories</p>
+    </div>
+
+    <div id="controls" class="hud-panel">
+        <h4>Animation Speed Control</h4>
         <div class="control-group">
-            <label class="control-label">Speed Multiplier: <span id="speedValue">1.0x</span></label>
+            <label class="control-label">
+                Speed Multiplier: <span id="speedValue">1.0x</span>
+            </label>
             <input type="range" id="speedSlider" min="0" max="300" value="100" step="1">
         </div>
         <div class="control-group">
-            <label class="control-label">0.0x (Paused) ← → 3.0x (Fast)</label>
+            <div style="display: flex; justify-content: space-between; color: #66b3ff; font-size: 11px; margin-top: 8px; font-family: 'Orbitron', sans-serif;">
+                <span>PAUSED</span>
+                <span>NORMAL</span>
+                <span>FAST</span>
+            </div>
         </div>
     </div>
     
-    <div id="copyright">
-        <h4>© 2026 Solar System WebGL</h4>
-        <p>Developed by:</p>
+    <div id="copyright" class="hud-panel">
+        <h4>Solar System Simulation</h4>
+        <p class="institution">Arab American University</p>
+        <p class="institution">Ramallah Campus</p>
+        <p class="instructor">Instructor: Dr. Eman Naser</p>
+        <p style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(100, 150, 255, 0.3);">
+            <strong>Developed by:</strong>
+        </p>
         <p>Omar Jaber</p>
         <p>Yazan Aydi</p>
         <p>Mohammad Munir</p>
+        <p style="margin-top: 10px; font-size: 11px; color: #888;">© 2026 All Rights Reserved</p>
     </div>
 
-    <!-- PLANET VERTEX SHADER -->
+    <!-- PLANET VERTEX SHADER WITH TEXTURE COORDINATES -->
     <script id="vertex-shader" type="x-shader/x-vertex">
         attribute vec3 aPosition;
         attribute vec3 aNormal;
+        attribute vec2 aTexCoord;  // UV texture coordinates
         
         uniform mat4 uModelMatrix;
         uniform mat4 uViewMatrix;
@@ -171,16 +726,18 @@
         
         varying vec3 vNormal;
         varying vec3 vPosition;
+        varying vec2 vTexCoord;  // Pass to fragment shader
         
         void main() {
             vec4 worldPosition = uModelMatrix * vec4(aPosition, 1.0);
             vPosition = worldPosition.xyz;
             vNormal = normalize((uNormalMatrix * vec4(aNormal, 0.0)).xyz);
+            vTexCoord = aTexCoord;
             gl_Position = uProjectionMatrix * uViewMatrix * worldPosition;
         }
     </script>
 
-    <!-- PLANET FRAGMENT SHADER with Enhanced Lighting -->
+    <!-- PLANET FRAGMENT SHADER with Textures and Enhanced Lighting -->
     <script id="fragment-shader" type="x-shader/x-fragment">
         precision mediump float;
         
@@ -190,43 +747,323 @@
         uniform vec3 uCameraPosition;
         uniform float uGlow;
         
+        uniform sampler2D uTexture;      // Main texture
+        uniform bool uHasTexture;        // Whether to use texture
+        uniform bool uIsEarth;           // Special Earth handling
+        uniform sampler2D uEarthDay;     // Earth day texture
+        uniform sampler2D uEarthNight;   // Earth night texture (city lights)
+        uniform sampler2D uEarthClouds;  // Earth cloud layer
+        uniform bool uIsRing;            // Ring texture with alpha
+        
         varying vec3 vNormal;
         varying vec3 vPosition;
+        varying vec2 vTexCoord;
         
         void main() {
+            vec3 baseColor;
+            
+            if (uHasTexture) {
+                if (uIsEarth) {
+                    // EARTH: Blend day/night based on Sun direction
+                    vec3 normal = normalize(vNormal);
+                    vec3 lightDir = normalize(uLightPosition - vPosition);
+                    
+                    // How much this fragment faces the sun (-1 to 1)
+                    float sunDot = dot(normal, lightDir);
+                    
+                    // Sample all Earth textures
+                    vec3 dayTexture = texture2D(uEarthDay, vTexCoord).rgb;
+                    vec3 nightTexture = texture2D(uEarthNight, vTexCoord).rgb;
+                    vec3 clouds = texture2D(uEarthClouds, vTexCoord).rgb;
+                    
+                    // Dramatic day/night transition
+                    // sunDot > 0 = facing sun (day), < 0 = facing away (night)
+                    float dayAmount = smoothstep(-0.02, 0.02, sunDot);
+                    
+                    // Mix day and night - night lights are BOOSTED for visibility
+                    vec3 surface = mix(
+                        nightTexture * 5.0,  // Night lights very bright
+                        dayTexture,           // Day side normal
+                        dayAmount
+                    );
+                    
+                    // Add clouds on top (brighter clouds, partial transparency)
+                    float cloudMask = (clouds.r + clouds.g + clouds.b) / 3.0;
+                    baseColor = mix(surface, clouds * 1.5, cloudMask * 0.5);
+                } else {
+                    baseColor = texture2D(uTexture, vTexCoord).rgb;
+                }
+            } else {
+                baseColor = uColor;
+            }
+            
             if (uIsEmissive) {
-                gl_FragColor = vec4(uColor * uGlow, 1.0);
+                gl_FragColor = vec4(baseColor * uGlow, 1.0);
+            } else if (uIsEarth) {
+                // Earth: Day/night already blended in baseColor, apply minimal lighting
+                vec3 normal = normalize(vNormal);
+                vec3 viewDir = normalize(uCameraPosition - vPosition);
+                vec3 halfDir = normalize(normalize(uLightPosition - vPosition) + viewDir);
+                
+                // Subtle ambient for dark side visibility
+                vec3 ambient = 0.02 * baseColor;
+                
+                // Add specular for ocean reflections
+                float spec = pow(max(dot(normal, halfDir), 0.0), 32.0);
+                vec3 specular = vec3(0.2) * spec;
+                
+                // Rim lighting for atmosphere
+                float rimFactor = 1.0 - max(dot(viewDir, normal), 0.0);
+                rimFactor = pow(rimFactor, 3.0);
+                vec3 rimLight = vec3(0.3, 0.5, 0.8) * rimFactor * 0.4;
+                
+                vec3 result = baseColor + ambient + specular + rimLight;
+                gl_FragColor = vec4(result, 1.0);
             } else {
                 vec3 normal = normalize(vNormal);
                 vec3 lightDir = normalize(uLightPosition - vPosition);
                 vec3 viewDir = normalize(uCameraPosition - vPosition);
                 vec3 halfDir = normalize(lightDir + viewDir);
                 
-                vec3 ambient = 0.05 * uColor;
+                vec3 ambient = 0.05 * baseColor;
                 
                 float diff = max(dot(normal, lightDir), 0.0);
-                vec3 diffuse = diff * uColor;
+                vec3 diffuse = diff * baseColor;
                 
                 float spec = pow(max(dot(normal, halfDir), 0.0), 64.0);
                 vec3 specular = vec3(0.4) * spec;
                 
                 float rimFactor = 1.0 - max(dot(viewDir, normal), 0.0);
                 rimFactor = pow(rimFactor, 3.0);
-                vec3 rimLight = uColor * rimFactor * 0.3;
+                vec3 rimLight = baseColor * rimFactor * 0.3;
                 
                 float distance = length(uLightPosition - vPosition);
                 float attenuation = 1.0 / (1.0 + 0.01 * distance + 0.001 * distance * distance);
                 
                 vec3 result = ambient + (diffuse + specular + rimLight) * attenuation;
                 
-                // Use uGlow for transparency (for rings) - if < 1.0, it's a ring
-                float alpha = (uGlow < 1.0) ? uGlow : 1.0;
+                // Handle ring transparency
+                float alpha = 1.0;
+                if (uIsRing && uHasTexture) {
+                    alpha = texture2D(uTexture, vTexCoord).a * uGlow;
+                } else if (uGlow < 1.0) {
+                    alpha = uGlow;
+                }
+                
                 gl_FragColor = vec4(result, alpha);
             }
         }
     </script>
 
-    <!-- STAR VERTEX SHADER -->
+    <!-- SKYBOX VERTEX SHADER -->
+    <script id="skybox-vertex-shader" type="x-shader/x-vertex">
+        attribute vec3 aPosition;
+        attribute vec2 aTexCoord;
+        
+        uniform mat4 uViewMatrix;
+        uniform mat4 uProjectionMatrix;
+        
+        varying vec2 vTexCoord;
+        
+        void main() {
+            vTexCoord = aTexCoord;
+            
+            // Create view matrix without translation (keep only rotation)
+            mat4 viewNoTranslation = mat4(
+                uViewMatrix[0][0], uViewMatrix[0][1], uViewMatrix[0][2], 0.0,
+                uViewMatrix[1][0], uViewMatrix[1][1], uViewMatrix[1][2], 0.0,
+                uViewMatrix[2][0], uViewMatrix[2][1], uViewMatrix[2][2], 0.0,
+                0.0, 0.0, 0.0, 1.0
+            );
+            
+            vec4 pos = uProjectionMatrix * viewNoTranslation * vec4(aPosition, 1.0);
+            gl_Position = pos.xyww;  // Set z=w so skybox is always at far plane
+        }
+    </script>
+
+    <!-- SKYBOX FRAGMENT SHADER -->
+    <script id="skybox-fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        
+        uniform sampler2D uSkyboxTexture;
+        varying vec2 vTexCoord;
+        
+        void main() {
+            gl_FragColor = texture2D(uSkyboxTexture, vTexCoord);
+        }
+    </script>
+    
+    <!-- SUN CORONA VERTEX SHADER -->
+    <script id="corona-vertex-shader" type="x-shader/x-vertex">
+        attribute vec3 aPosition;
+        
+        uniform mat4 uModelMatrix;
+        uniform mat4 uViewMatrix;
+        uniform mat4 uProjectionMatrix;
+        
+        varying vec3 vPosition;
+        varying vec3 vWorldPosition;
+        
+        void main() {
+            vPosition = aPosition;
+            vec4 worldPos = uModelMatrix * vec4(aPosition, 1.0);
+            vWorldPosition = worldPos.xyz;
+            gl_Position = uProjectionMatrix * uViewMatrix * worldPos;
+        }
+    </script>
+    
+    <!-- SUN CORONA FRAGMENT SHADER with Animated Flames -->
+    <script id="corona-fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        
+        uniform float uTime;
+        uniform vec3 uCameraPosition;
+        uniform vec3 uSunCenter;
+        uniform float uSunRadius;
+        
+        varying vec3 vPosition;
+        varying vec3 vWorldPosition;
+        
+        // Simplex noise functions for flame effect
+        vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+        vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+        vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+        vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+        
+        float snoise(vec3 v) {
+            const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+            const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+            
+            vec3 i = floor(v + dot(v, C.yyy));
+            vec3 x0 = v - i + dot(i, C.xxx);
+            
+            vec3 g = step(x0.yzx, x0.xyz);
+            vec3 l = 1.0 - g;
+            vec3 i1 = min(g.xyz, l.zxy);
+            vec3 i2 = max(g.xyz, l.zxy);
+            
+            vec3 x1 = x0 - i1 + C.xxx;
+            vec3 x2 = x0 - i2 + C.yyy;
+            vec3 x3 = x0 - D.yyy;
+            
+            i = mod289(i);
+            vec4 p = permute(permute(permute(
+                i.z + vec4(0.0, i1.z, i2.z, 1.0))
+                + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+                + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+                
+            float n_ = 0.142857142857;
+            vec3 ns = n_ * D.wyz - D.xzx;
+            
+            vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+            
+            vec4 x_ = floor(j * ns.z);
+            vec4 y_ = floor(j - 7.0 * x_);
+            
+            vec4 x = x_ *ns.x + ns.yyyy;
+            vec4 y = y_ *ns.x + ns.yyyy;
+            vec4 h = 1.0 - abs(x) - abs(y);
+            
+            vec4 b0 = vec4(x.xy, y.xy);
+            vec4 b1 = vec4(x.zw, y.zw);
+            
+            vec4 s0 = floor(b0)*2.0 + 1.0;
+            vec4 s1 = floor(b1)*2.0 + 1.0;
+            vec4 sh = -step(h, vec4(0.0));
+            
+            vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+            vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+            
+            vec3 p0 = vec3(a0.xy, h.x);
+            vec3 p1 = vec3(a0.zw, h.y);
+            vec3 p2 = vec3(a1.xy, h.z);
+            vec3 p3 = vec3(a1.zw, h.w);
+            
+            vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+            p0 *= norm.x;
+            p1 *= norm.y;
+            p2 *= norm.z;
+            p3 *= norm.w;
+            
+            vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+            m = m * m;
+            return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+        }
+        
+        // Fractal Brownian Motion for more complex flames
+        float fbm(vec3 p) {
+            float value = 0.0;
+            float amplitude = 0.5;
+            float frequency = 1.0;
+            
+            for (int i = 0; i < 4; i++) {
+                value += amplitude * snoise(p * frequency);
+                amplitude *= 0.5;
+                frequency *= 2.0;
+            }
+            return value;
+        }
+        
+        void main() {
+            // Calculate distance from sun center
+            vec3 toSurface = vWorldPosition - uSunCenter;
+            float dist = length(toSurface);
+            vec3 dir = normalize(toSurface);
+            
+            // Normalized distance from surface (0 at surface, 1 at edge of corona)
+            float coronaSize = uSunRadius * 1.8;
+            float normalizedDist = (dist - uSunRadius) / (coronaSize - uSunRadius);
+            normalizedDist = clamp(normalizedDist, 0.0, 1.0);
+            
+            // Skip if inside the sun sphere
+            if (dist < uSunRadius * 0.98) {
+                discard;
+            }
+            
+            // Animated flame noise
+            vec3 noiseCoord = dir * 3.0 + vec3(0.0, uTime * 0.3, uTime * 0.2);
+            float flameNoise = fbm(noiseCoord);
+            
+            // Secondary faster-moving flames
+            vec3 noiseCoord2 = dir * 5.0 + vec3(uTime * 0.5, 0.0, uTime * 0.4);
+            float flameNoise2 = fbm(noiseCoord2) * 0.5;
+            
+            // Combine flame effects
+            float flames = flameNoise + flameNoise2;
+            flames = flames * 0.5 + 0.5; // Normalize to 0-1
+            
+            // Corona intensity - brighter near surface, fading outward
+            float baseIntensity = 1.0 - normalizedDist;
+            baseIntensity = pow(baseIntensity, 1.5);
+            
+            // Add flame variation
+            float finalIntensity = baseIntensity * (0.7 + flames * 0.5);
+            
+            // Corona colors - from white-yellow at center to orange-red at edges
+            vec3 innerColor = vec3(1.0, 0.95, 0.8);  // Hot white-yellow
+            vec3 midColor = vec3(1.0, 0.7, 0.2);     // Orange
+            vec3 outerColor = vec3(0.9, 0.3, 0.1);   // Red
+            
+            vec3 coronaColor;
+            if (normalizedDist < 0.3) {
+                coronaColor = mix(innerColor, midColor, normalizedDist / 0.3);
+            } else {
+                coronaColor = mix(midColor, outerColor, (normalizedDist - 0.3) / 0.7);
+            }
+            
+            // Add bright flame prominences
+            float prominence = max(0.0, flames - 0.6) * 3.0;
+            finalIntensity += prominence * baseIntensity;
+            
+            // Final color with alpha for blending
+            float alpha = finalIntensity * 0.8;
+            alpha = clamp(alpha, 0.0, 1.0);
+            
+            gl_FragColor = vec4(coronaColor * finalIntensity * 1.5, alpha);
+        }
+    </script>
+
+    <!-- STAR VERTEX SHADER (for point stars) -->
     <script id="star-vertex-shader" type="x-shader/x-vertex">
         attribute vec3 aPosition;
         attribute float aSize;
@@ -243,7 +1080,7 @@
         }
     </script>
 
-    <!-- STAR FRAGMENT SHADER -->
+    <!-- STAR FRAGMENT SHADER (for point stars) -->
     <script id="star-fragment-shader" type="x-shader/x-fragment">
         precision mediump float;
         
@@ -342,8 +1179,8 @@
             vec3 result = sceneColor.rgb + bloomColor.rgb * uBloomIntensity;
             result = result / (result + vec3(1.0));
             
-            gl_FragColor = vec4(result, 1.0);
-        }
+                gl_FragColor = vec4(result, 1.0);
+            }
     </script>
 
     <!-- TRAIL VERTEX SHADER -->
@@ -390,6 +1227,109 @@
             speedValue.textContent = speedMultiplier.toFixed(1) + 'x';
         });
         
+        // ===== HUD Toggle System =====
+        const infoPanel = document.getElementById('info');
+        const controlsPanel = document.getElementById('controls');
+        const copyrightPanel = document.getElementById('copyright');
+        
+        const toggleInfoBtn = document.getElementById('toggleInfo');
+        const toggleControlsBtn = document.getElementById('toggleControls');
+        const toggleCopyrightBtn = document.getElementById('toggleCopyright');
+        const hudToggleBtn = document.getElementById('hudToggle');
+        
+        // Individual panel toggles
+        toggleInfoBtn.addEventListener('click', () => {
+            infoPanel.classList.toggle('hidden');
+        });
+        
+        toggleControlsBtn.addEventListener('click', () => {
+            controlsPanel.classList.toggle('hidden');
+        });
+        
+        toggleCopyrightBtn.addEventListener('click', () => {
+            copyrightPanel.classList.toggle('hidden');
+        });
+        
+        // Master HUD toggle - hides everything
+        let hudVisible = true;
+        hudToggleBtn.addEventListener('click', () => {
+            hudVisible = !hudVisible;
+            if (hudVisible) {
+                infoPanel.classList.remove('hidden');
+                controlsPanel.classList.remove('hidden');
+                copyrightPanel.classList.remove('hidden');
+                toggleInfoBtn.classList.remove('hidden');
+                toggleControlsBtn.classList.remove('hidden');
+                toggleCopyrightBtn.classList.remove('hidden');
+                hudToggleBtn.textContent = 'HUD';
+                hudToggleBtn.style.background = 'linear-gradient(135deg, rgba(255, 0, 100, 0.3), rgba(200, 0, 255, 0.3))';
+            } else {
+                infoPanel.classList.add('hidden');
+                controlsPanel.classList.add('hidden');
+                copyrightPanel.classList.add('hidden');
+                toggleInfoBtn.classList.add('hidden');
+                toggleControlsBtn.classList.add('hidden');
+                toggleCopyrightBtn.classList.add('hidden');
+                hudToggleBtn.textContent = 'SHOW';
+                hudToggleBtn.style.background = 'linear-gradient(135deg, rgba(0, 255, 100, 0.3), rgba(0, 200, 255, 0.3))';
+            }
+        });
+        
+        // Keyboard shortcut for HUD toggle (H key)
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'h') {
+                hudToggleBtn.click();
+            }
+        });
+        
+        // ===== Planet Tracking System =====
+        const planetSelect = document.getElementById('planetSelect');
+        const trackingStatus = document.getElementById('trackingStatus');
+        
+        // Planet-specific camera distances (based on planet size)
+        const planetCameraDistances = {
+            'Sun': 25,
+            'Mercury': 3,
+            'Venus': 4,
+            'Earth': 5,
+            'Mars': 4,
+            'Jupiter': 15,
+            'Saturn': 14,
+            'Uranus': 8,
+            'Neptune': 8
+        };
+        
+        planetSelect.addEventListener('change', () => {
+            const selectedPlanet = planetSelect.value;
+            
+            if (selectedPlanet) {
+                trackingPlanet = selectedPlanet;
+                trackingStatus.textContent = 'Tracking: ' + selectedPlanet;
+                trackingStatus.classList.add('tracking');
+                targetCameraDistance = planetCameraDistances[selectedPlanet] || 10;
+                console.log('🔭 Now tracking:', selectedPlanet);
+            } else {
+                trackingPlanet = null;
+                trackingStatus.textContent = 'Overview Mode';
+                trackingStatus.classList.remove('tracking');
+                targetCameraDistance = 150;
+                targetOffsetX = 0;
+                targetOffsetY = 0;
+                console.log('📷 Overview mode');
+            }
+        });
+        
+        // Keyboard shortcuts for planet selection
+        window.addEventListener('keydown', (e) => {
+            const key = e.key;
+            // Number keys 1-9 for planets, 0 for overview
+            if (key >= '0' && key <= '9') {
+                const planetNames = ['', 'Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'];
+                planetSelect.value = planetNames[parseInt(key)] || '';
+                planetSelect.dispatchEvent(new Event('change'));
+            }
+        });
+
         // Resize canvas
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -397,7 +1337,7 @@
             gl.viewport(0, 0, canvas.width, canvas.height);
             createFramebuffers();
         }
-        
+
         // ===== Shader Compilation =====
         function compileShader(gl, source, type) {
             const shader = gl.createShader(type);
@@ -459,12 +1399,35 @@
             document.getElementById('trail-fragment-shader').textContent
         );
         
+        const skyboxProgram = createProgram(gl,
+            document.getElementById('skybox-vertex-shader').textContent,
+            document.getElementById('skybox-fragment-shader').textContent
+        );
+        
+        // Corona shader program for sun flames
+        const coronaProgram = createProgram(gl,
+            document.getElementById('corona-vertex-shader').textContent,
+            document.getElementById('corona-fragment-shader').textContent
+        );
+        
+        // Verify all programs compiled successfully
+        if (!program || !starProgram || !bloomExtractProgram || !bloomBlurProgram || 
+            !bloomCombineProgram || !trailProgram || !skyboxProgram || !coronaProgram) {
+            console.error('❌ One or more shader programs failed to compile!');
+            alert('Shader compilation failed! Check console for details.');
+        } else {
+            console.log('✅ All shader programs compiled successfully!');
+        }
+        
         // Get attribute and uniform locations
         const attrs = {
             position: gl.getAttribLocation(program, 'aPosition'),
             normal: gl.getAttribLocation(program, 'aNormal'),
+            texCoord: gl.getAttribLocation(program, 'aTexCoord'),  // NEW: Texture coordinates
             starPosition: gl.getAttribLocation(starProgram, 'aPosition'),
-            starSize: gl.getAttribLocation(starProgram, 'aSize')
+            starSize: gl.getAttribLocation(starProgram, 'aSize'),
+            skyboxPosition: gl.getAttribLocation(skyboxProgram, 'aPosition'),
+            skyboxTexCoord: gl.getAttribLocation(skyboxProgram, 'aTexCoord')
         };
         
         const uniforms = {
@@ -477,8 +1440,27 @@
             isEmissive: gl.getUniformLocation(program, 'uIsEmissive'),
             cameraPosition: gl.getUniformLocation(program, 'uCameraPosition'),
             glow: gl.getUniformLocation(program, 'uGlow'),
+            // NEW: Texture-related uniforms
+            texture: gl.getUniformLocation(program, 'uTexture'),
+            hasTexture: gl.getUniformLocation(program, 'uHasTexture'),
+            isEarth: gl.getUniformLocation(program, 'uIsEarth'),
+            earthDay: gl.getUniformLocation(program, 'uEarthDay'),
+            earthNight: gl.getUniformLocation(program, 'uEarthNight'),
+            earthClouds: gl.getUniformLocation(program, 'uEarthClouds'),
+            isRing: gl.getUniformLocation(program, 'uIsRing'),
             starView: gl.getUniformLocation(starProgram, 'uViewMatrix'),
-            starProj: gl.getUniformLocation(starProgram, 'uProjectionMatrix')
+            starProj: gl.getUniformLocation(starProgram, 'uProjectionMatrix'),
+            skyboxView: gl.getUniformLocation(skyboxProgram, 'uViewMatrix'),
+            skyboxProj: gl.getUniformLocation(skyboxProgram, 'uProjectionMatrix'),
+            skyboxTexture: gl.getUniformLocation(skyboxProgram, 'uSkyboxTexture'),
+            // Corona uniforms
+            coronaModel: gl.getUniformLocation(coronaProgram, 'uModelMatrix'),
+            coronaView: gl.getUniformLocation(coronaProgram, 'uViewMatrix'),
+            coronaProj: gl.getUniformLocation(coronaProgram, 'uProjectionMatrix'),
+            coronaTime: gl.getUniformLocation(coronaProgram, 'uTime'),
+            coronaCamera: gl.getUniformLocation(coronaProgram, 'uCameraPosition'),
+            coronaSunCenter: gl.getUniformLocation(coronaProgram, 'uSunCenter'),
+            coronaSunRadius: gl.getUniformLocation(coronaProgram, 'uSunRadius')
         };
 
         // ===== Matrix Operations =====
@@ -669,6 +1651,7 @@
         function createSphere(radius, latBands, longBands) {
             const vertices = [];
             const normals = [];
+            const texCoords = [];  // UV coordinates for textures
             const indices = [];
             
             for (let lat = 0; lat <= latBands; lat++) {
@@ -687,6 +1670,11 @@
                     
                     normals.push(x, y, z);
                     vertices.push(radius * x, radius * y, radius * z);
+                    
+                    // UV coordinates for spherical mapping (flip V to fix upside-down)
+                    const u = 1.0 - (long / longBands);
+                    const v = (lat / latBands);  // Removed the "1.0 -" to flip vertically
+                    texCoords.push(u, v);
                 }
             }
             
@@ -700,7 +1688,7 @@
                 }
             }
             
-            return { vertices, normals, indices };
+            return { vertices, normals, texCoords, indices };
         }
 
         // ===== Ring Geometry Generation =====
@@ -708,6 +1696,7 @@
         function createRing(innerRadius, outerRadius, segments) {
             const vertices = [];
             const normals = [];
+            const texCoords = [];  // UV coordinates for ring texture
             const indices = [];
             
             // Create ring vertices
@@ -719,10 +1708,12 @@
                 // Inner vertex
                 vertices.push(innerRadius * cos, 0, innerRadius * sin);
                 normals.push(0, 1, 0); // Normal points up
+                texCoords.push(0.0, i / segments);  // Inner edge UV
                 
                 // Outer vertex
                 vertices.push(outerRadius * cos, 0, outerRadius * sin);
                 normals.push(0, 1, 0);
+                texCoords.push(1.0, i / segments);  // Outer edge UV
             }
             
             // Create indices for triangles
@@ -734,7 +1725,7 @@
                 indices.push(base + 1, base + 2, base + 3);
             }
             
-            return { vertices, normals, indices };
+            return { vertices, normals, texCoords, indices };
         }
 
         // Create sphere buffers
@@ -747,6 +1738,10 @@
         const normalBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphere.normals), gl.STATIC_DRAW);
+        
+        const texCoordBuffer = gl.createBuffer();  // NEW: Texture coordinates
+        gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphere.texCoords), gl.STATIC_DRAW);
         
         const indexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -763,9 +1758,43 @@
         gl.bindBuffer(gl.ARRAY_BUFFER, ringNormalBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(ring.normals), gl.STATIC_DRAW);
         
+        const ringTexCoordBuffer = gl.createBuffer();  // NEW: Ring texture coordinates
+        gl.bindBuffer(gl.ARRAY_BUFFER, ringTexCoordBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(ring.texCoords), gl.STATIC_DRAW);
+        
         const ringIndexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ringIndexBuffer);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(ring.indices), gl.STATIC_DRAW);
+
+        // ===== Skybox Geometry =====
+        // Create a large sphere for the skybox background
+        const skyboxSphere = createSphere(1500, 30, 30);  // Very large sphere for realistic scale
+        
+        const skyboxPositionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, skyboxPositionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(skyboxSphere.vertices), gl.STATIC_DRAW);
+        
+        const skyboxTexCoordBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, skyboxTexCoordBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(skyboxSphere.texCoords), gl.STATIC_DRAW);
+        
+        const skyboxIndexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, skyboxIndexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(skyboxSphere.indices), gl.STATIC_DRAW);
+        
+        // ===== Sun Corona Sphere =====
+        // Corona sphere is 1.8x the sun's radius for flame effect
+        const coronaSphere = createSphere(1.0, 48, 48);  // Unit sphere, scaled in rendering
+        
+        const coronaPositionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, coronaPositionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(coronaSphere.vertices), gl.STATIC_DRAW);
+        
+        const coronaIndexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, coronaIndexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(coronaSphere.indices), gl.STATIC_DRAW);
+        
+        const coronaPositionAttr = gl.getAttribLocation(coronaProgram, 'aPosition');
 
         // ===== Star Generation =====
         function generateStars(count) {
@@ -798,108 +1827,310 @@
         gl.bindBuffer(gl.ARRAY_BUFFER, starSizeBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(stars.sizes), gl.STATIC_DRAW);
 
+        // ===== Texture Loading System with Progress Tracking =====
+        let texturesLoaded = 0;
+        const totalTextures = 14;  // Fixed: Actual count of textures
+        const loadingProgressEl = document.getElementById('loadingProgress');
+        const loadingScreen = document.getElementById('loadingScreen');
+        
+        function hideLoadingScreen() {
+            console.log('Hiding loading screen...');
+            loadingScreen.classList.add('loaded');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 800);
+        }
+        
+        function updateLoadingProgress() {
+            texturesLoaded++;
+            if (loadingProgressEl) {
+                loadingProgressEl.textContent = `Loading Textures: ${texturesLoaded}/${totalTextures}`;
+            }
+            console.log(`Texture loaded: ${texturesLoaded}/${totalTextures}`);
+            
+            if (texturesLoaded >= totalTextures) {
+                setTimeout(hideLoadingScreen, 500);
+            }
+        }
+        
+        // Fallback: Hide loading screen after 3 seconds regardless
+        setTimeout(() => {
+            if (!loadingScreen.classList.contains('loaded')) {
+                console.log('Loading screen timeout - forcing hide');
+                hideLoadingScreen();
+            }
+        }, 3000);
+        
+        function loadTexture(gl, url) {
+            const texture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            
+            // Temporary 1x1 white pixel until image loads
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+                new Uint8Array([255, 255, 255, 255]));
+            
+            const image = new Image();
+            
+            image.onerror = () => {
+                console.error('Failed to load texture:', url);
+                updateLoadingProgress();
+            };
+            
+            image.onload = () => {
+                try {
+                    gl.bindTexture(gl.TEXTURE_2D, texture);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+                    
+                    if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+                        gl.generateMipmap(gl.TEXTURE_2D);
+                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+                    } else {
+                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                    }
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                    console.log('Loaded:', url);
+                    updateLoadingProgress();
+                } catch (e) {
+                    console.error('Error loading texture:', url, e);
+                    updateLoadingProgress();
+                }
+            };
+            
+            image.src = url;
+            return texture;
+        }
+        
+        function isPowerOf2(value) {
+            return (value & (value - 1)) === 0;
+        }
+        
+        // Load all planet textures
+        console.log('Initializing texture system...');
+        const textures = {
+            sun: loadTexture(gl, 'textures/2k_sun.jpg'),
+            mercury: loadTexture(gl, 'textures/mercury.jpg'),
+            venus: loadTexture(gl, 'textures/2k_venus_surface.jpg'),
+            earthDay: loadTexture(gl, 'textures/2k_earth_daymap.jpg'),
+            earthNight: loadTexture(gl, 'textures/2k_earth_nightmap.jpg'),
+            earthClouds: loadTexture(gl, 'textures/2k_earth_clouds.jpg'),
+            mars: loadTexture(gl, 'textures/2k_mars.jpg'),
+            jupiter: loadTexture(gl, 'textures/2k_jupiter.jpg'),
+            saturn: loadTexture(gl, 'textures/2k_saturn.jpg'),
+            uranus: loadTexture(gl, 'textures/2k_uranus.jpg'),
+            neptune: loadTexture(gl, 'textures/2k_neptune.jpg'),
+            moon: loadTexture(gl, 'textures/2k_moon.jpg'),
+            saturnRing: loadTexture(gl, 'textures/2k_saturn_ring_alpha.png'),
+            starSkybox: loadTexture(gl, 'textures/2k_stars_milky_way.jpg')
+        };
+
         // ===== Enhanced Planet Data with Realistic Orbital Mechanics =====
         // Elliptical orbits with eccentricity (0 = circle, closer to 1 = more elliptical)
+        // ===== REALISTIC SOLAR SYSTEM DATA =====
+        // Based on real astronomical measurements, scaled for visualization
+        // Distance scale: 1 unit ≈ 0.1 AU (Astronomical Unit)
+        // Size scale: Compressed for visibility (true scale would make inner planets invisible)
+        // Orbital speed: Based on Kepler's laws (closer = faster)
+        // Rotation speed: Based on actual planetary rotation periods
+        
         const planets = [
             { 
-                name: 'Sun', radius: 3.5, semiMajorAxis: 0, orbitSpeed: 0, rotationSpeed: 0.005,
-                eccentricity: 0, // Sun doesn't orbit
-                color: [1.0, 0.9, 0.2], emissive: true, glow: 2.5,
+                // THE SUN - Our star, 109× Earth's diameter, 25-day rotation at equator
+                name: 'Sun', 
+                radius: 8.0,              // Real: 109× Earth, compressed for visibility
+                semiMajorAxis: 0, 
+                orbitSpeed: 0, 
+                rotationSpeed: 0.008,     // ~25 Earth days per rotation
+                eccentricity: 0,
+                color: [1.0, 0.95, 0.4], 
+                emissive: true, 
+                glow: 3.0,
+                texture: 'sun',
                 moons: []
             },
             { 
-                name: 'Mercury', radius: 0.38, semiMajorAxis: 6, orbitSpeed: 4.15, rotationSpeed: 0.002,
-                eccentricity: 0.206, // Most eccentric orbit
-                color: [0.7, 0.7, 0.7], emissive: false, glow: 1.0,
-                moons: []
+                // MERCURY - Smallest planet, closest to Sun, highly elliptical orbit
+                name: 'Mercury', 
+                radius: 0.35,             // Real: 0.38× Earth
+                semiMajorAxis: 12,        // Real: 0.39 AU - closest to Sun
+                orbitSpeed: 4.15,         // Real: 88 Earth days (fastest orbit)
+                rotationSpeed: 0.003,     // Real: 59 Earth days per rotation (very slow)
+                eccentricity: 0.206,      // Real: Most elliptical of the planets
+                color: [0.7, 0.7, 0.7], 
+                emissive: false, 
+                glow: 1.0,
+                texture: 'mercury',
+                moons: []                 // No moons
             },
             { 
-                name: 'Venus', radius: 0.95, semiMajorAxis: 8, orbitSpeed: 1.62, rotationSpeed: 0.0005,
-                eccentricity: 0.007, // Nearly circular
-                color: [0.9, 0.75, 0.5], emissive: false, glow: 1.0,
-                moons: []
+                // VENUS - Similar size to Earth, thick atmosphere, retrograde rotation
+                name: 'Venus', 
+                radius: 0.90,             // Real: 0.95× Earth
+                semiMajorAxis: 18,        // Real: 0.72 AU
+                orbitSpeed: 1.62,         // Real: 225 Earth days
+                rotationSpeed: -0.001,    // Real: 243 days RETROGRADE (spins backwards!)
+                eccentricity: 0.007,      // Real: Nearly circular orbit
+                color: [0.95, 0.85, 0.55], 
+                emissive: false, 
+                glow: 1.0,
+                texture: 'venus',
+                moons: []                 // No moons
             },
             { 
-                name: 'Earth', radius: 1.0, semiMajorAxis: 11, orbitSpeed: 1.0, rotationSpeed: 0.05,
-                eccentricity: 0.017, // Slightly elliptical
-                color: [0.1, 0.4, 0.8], emissive: false, glow: 1.0,
+                // EARTH - Our home, 1 AU reference distance, 365.25 day orbit
+                name: 'Earth', 
+                radius: 1.0,              // Reference size
+                semiMajorAxis: 25,        // Real: 1.00 AU - reference distance
+                orbitSpeed: 1.0,          // Real: 365.25 days - reference speed
+                rotationSpeed: 0.20,      // Real: 24 hours (1 day)
+                eccentricity: 0.017,      // Real: Slightly elliptical
+                color: [0.2, 0.5, 0.9], 
+                emissive: false, 
+                glow: 1.0,
+                texture: 'earth',
+                isEarth: true,            // Special day/night shader
                 moons: [
-                    { name: 'Moon', radius: 0.27, distance: 2.2, orbitSpeed: 2.0, color: [0.8, 0.8, 0.75] }
+                    // THE MOON - Earth's only natural satellite, tidally locked
+                    { 
+                        name: 'Moon', 
+                        radius: 0.27,     // Real: 0.27× Earth
+                        distance: 3.0,    // Real: ~384,400 km
+                        orbitSpeed: 1.0,  // Real: 27.3 days (sidereal)
+                        color: [0.85, 0.85, 0.8], 
+                        texture: 'moon' 
+                    }
                 ]
             },
             { 
-                name: 'Mars', radius: 0.53, semiMajorAxis: 14, orbitSpeed: 0.53, rotationSpeed: 0.048,
-                eccentricity: 0.093, // Moderately elliptical
-                color: [0.9, 0.3, 0.2], emissive: false, glow: 1.0,
+                // MARS - The Red Planet, thin atmosphere, two small moons
+                name: 'Mars', 
+                radius: 0.50,             // Real: 0.53× Earth
+                semiMajorAxis: 38,        // Real: 1.52 AU
+                orbitSpeed: 0.53,         // Real: 687 Earth days
+                rotationSpeed: 0.19,      // Real: 24.6 hours (similar to Earth!)
+                eccentricity: 0.093,      // Real: Moderately elliptical
+                color: [0.9, 0.4, 0.2], 
+                emissive: false, 
+                glow: 1.0,
+                texture: 'mars',
                 moons: [
-                    { name: 'Phobos', radius: 0.12, distance: 1.3, orbitSpeed: 5.0, color: [0.6, 0.6, 0.5] },
-                    { name: 'Deimos', radius: 0.08, distance: 1.8, orbitSpeed: 3.5, color: [0.65, 0.65, 0.55] }
+                    // PHOBOS - Larger inner moon, very close orbit, will crash into Mars
+                    { name: 'Phobos', radius: 0.08, distance: 1.2, orbitSpeed: 8.0, color: [0.55, 0.5, 0.45], texture: 'moon' },
+                    // DEIMOS - Smaller outer moon, slowly drifting away
+                    { name: 'Deimos', radius: 0.05, distance: 1.8, orbitSpeed: 5.0, color: [0.6, 0.55, 0.5], texture: 'moon' }
                 ]
             },
             { 
-                name: 'Jupiter', radius: 2.5, semiMajorAxis: 20, orbitSpeed: 0.08, rotationSpeed: 0.12,
-                eccentricity: 0.049, // Slightly elliptical
-                color: [0.85, 0.65, 0.45], emissive: false, glow: 1.0,
+                // JUPITER - King of planets, 11× Earth diameter, fastest rotation
+                name: 'Jupiter', 
+                radius: 4.0,              // Real: 11.2× Earth (compressed)
+                semiMajorAxis: 80,        // Real: 5.20 AU - gas giant territory
+                orbitSpeed: 0.084,        // Real: 11.86 Earth years
+                rotationSpeed: 0.45,      // Real: 9.9 hours (FASTEST planet rotation!)
+                eccentricity: 0.049,      // Real: Low eccentricity
+                color: [0.88, 0.72, 0.55], 
+                emissive: false, 
+                glow: 1.0,
+                texture: 'jupiter',
                 rings: { 
-                    innerRadius: 2.8, 
+                    // Jupiter's faint ring system - discovered by Voyager 1 in 1979
+                    innerRadius: 4.5, 
+                    outerRadius: 5.5, 
+                    color: [0.5, 0.45, 0.35], 
+                    opacity: 0.08,        // Very faint, mostly dust
+                    tilt: 0.05,
+                    texture: 'saturnRing'
+                },
+                moons: [
+                    // GALILEAN MOONS - Discovered by Galileo in 1610
+                    { name: 'Io', radius: 0.28, distance: 6.5, orbitSpeed: 4.5, color: [0.95, 0.9, 0.4], texture: 'moon' },        // Volcanic moon
+                    { name: 'Europa', radius: 0.25, distance: 8.0, orbitSpeed: 3.5, color: [0.9, 0.92, 0.88], texture: 'moon' },   // Ice moon, possible life
+                    { name: 'Ganymede', radius: 0.40, distance: 10.0, orbitSpeed: 2.5, color: [0.65, 0.6, 0.55], texture: 'moon' }, // Largest moon in solar system
+                    { name: 'Callisto', radius: 0.36, distance: 13.0, orbitSpeed: 1.8, color: [0.45, 0.42, 0.4], texture: 'moon' }  // Ancient, cratered surface
+                ]
+            },
+            { 
+                // SATURN - Ringed beauty, second largest, low density (would float in water!)
+                name: 'Saturn', 
+                radius: 3.4,              // Real: 9.45× Earth (compressed)
+                semiMajorAxis: 140,       // Real: 9.58 AU
+                orbitSpeed: 0.034,        // Real: 29.46 Earth years
+                rotationSpeed: 0.42,      // Real: 10.7 hours (very fast!)
+                eccentricity: 0.056,      // Real: Slightly elliptical
+                color: [0.96, 0.88, 0.68], 
+                emissive: false, 
+                glow: 1.0,
+                texture: 'saturn',
+                rings: { 
+                    // Saturn's magnificent ring system - mostly water ice
+                    innerRadius: 4.5, 
+                    outerRadius: 7.5, 
+                    color: [0.92, 0.88, 0.78], 
+                    opacity: 0.75,        // Bright, spectacular rings
+                    tilt: 0.47,           // Real: 26.7° axial tilt
+                    texture: 'saturnRing'
+                },
+                moons: [
+                    // Saturn has 146 known moons!
+                    { name: 'Titan', radius: 0.40, distance: 8.0, orbitSpeed: 1.2, color: [0.85, 0.75, 0.55], texture: 'moon' },   // Thick atmosphere, hydrocarbon lakes
+                    { name: 'Rhea', radius: 0.15, distance: 5.5, orbitSpeed: 2.5, color: [0.88, 0.88, 0.85], texture: 'moon' },    // Second largest Saturn moon
+                    { name: 'Iapetus', radius: 0.12, distance: 10.0, orbitSpeed: 0.8, color: [0.6, 0.55, 0.5], texture: 'moon' },  // Two-tone coloring
+                    { name: 'Enceladus', radius: 0.10, distance: 4.0, orbitSpeed: 4.0, color: [0.98, 0.98, 0.98], texture: 'moon' } // Ice geysers, possible life
+                ]
+            },
+            { 
+                // URANUS - Ice giant, extreme axial tilt (rolls on its side!)
+                name: 'Uranus', 
+                radius: 1.8,              // Real: 4.01× Earth
+                semiMajorAxis: 280,       // Real: 19.22 AU - ice giant territory
+                orbitSpeed: 0.012,        // Real: 84 Earth years!
+                rotationSpeed: 0.28,      // Real: 17.2 hours (fast, retrograde)
+                eccentricity: 0.046,      // Real: Moderate eccentricity
+                color: [0.55, 0.82, 0.88], 
+                emissive: false, 
+                glow: 1.0,
+                texture: 'uranus',
+                rings: { 
+                    // Uranus's dark ring system - discovered in 1977
+                    innerRadius: 2.5, 
+                    outerRadius: 3.5, 
+                    color: [0.25, 0.3, 0.35], 
+                    opacity: 0.20,        // Dark, narrow rings
+                    tilt: 1.71,           // Real: 97.8° - nearly sideways!
+                    texture: 'saturnRing'
+                },
+                moons: [
+                    { name: 'Titania', radius: 0.20, distance: 5.0, orbitSpeed: 1.5, color: [0.78, 0.78, 0.75], texture: 'moon' },  // Largest Uranian moon
+                    { name: 'Oberon', radius: 0.18, distance: 6.5, orbitSpeed: 1.2, color: [0.72, 0.72, 0.7], texture: 'moon' },   // Second largest
+                    { name: 'Ariel', radius: 0.15, distance: 3.5, orbitSpeed: 2.2, color: [0.82, 0.82, 0.8], texture: 'moon' },    // Brightest Uranian moon
+                    { name: 'Miranda', radius: 0.08, distance: 2.5, orbitSpeed: 3.5, color: [0.7, 0.7, 0.68], texture: 'moon' }    // Bizarre geology
+                ]
+            },
+            { 
+                // NEPTUNE - Windiest planet, deepest blue, most distant true planet
+                name: 'Neptune', 
+                radius: 1.7,              // Real: 3.88× Earth
+                semiMajorAxis: 440,       // Real: 30.05 AU - edge of main solar system
+                orbitSpeed: 0.006,        // Real: 164.8 Earth years!
+                rotationSpeed: 0.30,      // Real: 16.1 hours
+                eccentricity: 0.009,      // Real: Nearly circular orbit
+                color: [0.25, 0.4, 0.95], 
+                emissive: false, 
+                glow: 1.0,
+                texture: 'neptune',
+                rings: { 
+                    // Neptune's faint ring system - first imaged by Voyager 2 in 1989
+                    innerRadius: 2.2, 
                     outerRadius: 3.2, 
-                    color: [0.6, 0.5, 0.4], 
-                    opacity: 0.15,
-                    tilt: 0.05
+                    color: [0.35, 0.4, 0.5], 
+                    opacity: 0.12,        // Very faint
+                    tilt: 0.49,           // Real: 28.3° axial tilt
+                    texture: 'saturnRing'
                 },
                 moons: [
-                    { name: 'Io', radius: 0.25, distance: 3.8, orbitSpeed: 3.2, color: [0.9, 0.85, 0.3] },
-                    { name: 'Europa', radius: 0.22, distance: 4.5, orbitSpeed: 2.8, color: [0.9, 0.9, 0.85] },
-                    { name: 'Ganymede', radius: 0.32, distance: 5.2, orbitSpeed: 2.2, color: [0.7, 0.6, 0.5] },
-                    { name: 'Callisto', radius: 0.28, distance: 6.0, orbitSpeed: 1.8, color: [0.5, 0.5, 0.45] }
-                ]
-            },
-            { 
-                name: 'Saturn', radius: 2.1, semiMajorAxis: 27, orbitSpeed: 0.03, rotationSpeed: 0.11,
-                eccentricity: 0.056, // Slightly elliptical
-                color: [0.95, 0.85, 0.65], emissive: false, glow: 1.0,
-                rings: { 
-                    innerRadius: 2.8, 
-                    outerRadius: 4.5, 
-                    color: [0.9, 0.85, 0.75], 
-                    opacity: 0.7,
-                    tilt: 0.15
-                },
-                moons: [
-                    { name: 'Titan', radius: 0.35, distance: 4.5, orbitSpeed: 2.0, color: [0.85, 0.75, 0.6] },
-                    { name: 'Rhea', radius: 0.15, distance: 3.5, orbitSpeed: 2.8, color: [0.85, 0.85, 0.8] },
-                    { name: 'Iapetus', radius: 0.12, distance: 5.5, orbitSpeed: 1.5, color: [0.7, 0.7, 0.65] }
-                ]
-            },
-            { 
-                name: 'Uranus', radius: 1.4, semiMajorAxis: 33, orbitSpeed: 0.01, rotationSpeed: 0.07,
-                eccentricity: 0.046, // Slightly elliptical
-                color: [0.4, 0.75, 0.85], emissive: false, glow: 1.0,
-                rings: { 
-                    innerRadius: 1.8, 
-                    outerRadius: 2.5, 
-                    color: [0.3, 0.35, 0.4], 
-                    opacity: 0.25,
-                    tilt: 1.57
-                },
-                moons: [
-                    { name: 'Titania', radius: 0.18, distance: 3.0, orbitSpeed: 2.5, color: [0.75, 0.75, 0.7] },
-                    { name: 'Oberon', radius: 0.16, distance: 3.8, orbitSpeed: 2.0, color: [0.7, 0.7, 0.68] }
-                ]
-            },
-            { 
-                name: 'Neptune', radius: 1.3, semiMajorAxis: 39, orbitSpeed: 0.006, rotationSpeed: 0.075,
-                eccentricity: 0.009, // Nearly circular
-                color: [0.2, 0.3, 0.9], emissive: false, glow: 1.0,
-                rings: { 
-                    innerRadius: 1.7, 
-                    outerRadius: 2.3, 
-                    color: [0.4, 0.45, 0.55], 
-                    opacity: 0.2,
-                    tilt: 0.08
-                },
-                moons: [
-                    { name: 'Triton', radius: 0.22, distance: 3.2, orbitSpeed: -2.8, color: [0.8, 0.8, 0.85] }
+                    // TRITON - Captured Kuiper Belt object, retrograde orbit
+                    { name: 'Triton', radius: 0.25, distance: 5.0, orbitSpeed: -1.5, color: [0.85, 0.88, 0.92], texture: 'moon' }
                 ]
             }
         ];
@@ -947,8 +2178,9 @@
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
 
         // ===== Camera Controls =====
-        let cameraDistance = 55;
-        let cameraAngleX = 0.4;
+        // Adjusted for realistic solar system scale
+        let cameraDistance = 150;         // Start further out to see inner planets
+        let cameraAngleX = 0.35;          // Slight top-down angle
         let cameraAngleY = 0;
         let cameraOffsetX = 0;
         let cameraOffsetY = 0;
@@ -956,6 +2188,16 @@
         let isDragging = false;
         let lastMouseX = 0;
         let lastMouseY = 0;
+        
+        // Planet tracking system - can track any planet!
+        let trackingPlanet = null;        // Name of planet being tracked (null = overview mode)
+        let trackedPlanetPosition = [0, 0, 0];  // Current position of tracked planet
+        let targetCameraDistance = 150;   // Match initial distance
+        let targetOffsetX = 0;
+        let targetOffsetY = 0;
+        
+        // Store all planet positions for tracking
+        let planetPositions = {};
 
         canvas.addEventListener('mousedown', (e) => {
             isDragging = true;
@@ -983,17 +2225,83 @@
 
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
-            cameraDistance += e.deltaY * 0.05;
-            cameraDistance = Math.max(15, Math.min(200, cameraDistance));
-        });
+            e.stopPropagation();
+            
+            // Calculate zoom amount based on scroll direction
+            const zoomAmount = e.deltaY * 0.5;
+            
+            if (trackingPlanet) {
+                // When tracking a planet, adjust target distance (closer range)
+                targetCameraDistance += zoomAmount * 0.15;
+                targetCameraDistance = Math.max(3, Math.min(50, targetCameraDistance));
+            } else {
+                // Normal zoom - update BOTH values to prevent snap-back
+                targetCameraDistance += zoomAmount;
+                targetCameraDistance = Math.max(30, Math.min(800, targetCameraDistance));
+                cameraDistance = targetCameraDistance; // Sync immediately
+            }
+        }, { passive: false });
 
+        // Enhanced keyboard controls
         window.addEventListener('keydown', (e) => {
-            const panSpeed = 0.5;
-            switch(e.key) {
-                case 'ArrowLeft': cameraOffsetX -= panSpeed; break;
-                case 'ArrowRight': cameraOffsetX += panSpeed; break;
-                case 'ArrowUp': cameraOffsetY += panSpeed; break;
-                case 'ArrowDown': cameraOffsetY -= panSpeed; break;
+            const panSpeed = 5.0;    // Increased for larger scale
+            const zoomSpeed = 10.0;  // Increased for larger scale
+            
+            switch(e.key.toLowerCase()) {
+                // Arrow keys - Pan camera (disabled when tracking a planet)
+                case 'arrowleft': 
+                    if (!trackingPlanet) cameraOffsetX -= panSpeed; 
+                    break;
+                case 'arrowright': 
+                    if (!trackingPlanet) cameraOffsetX += panSpeed; 
+                    break;
+                case 'arrowup': 
+                    if (!trackingPlanet) cameraOffsetY += panSpeed; 
+                    break;
+                case 'arrowdown': 
+                    if (!trackingPlanet) cameraOffsetY -= panSpeed; 
+                    break;
+                
+                // WASD - Advanced camera movement (adjusted for realistic scale)
+                case 'w': 
+                    if (trackingPlanet) {
+                        targetCameraDistance = Math.max(3, targetCameraDistance - 2);
+                    } else {
+                        targetCameraDistance = Math.max(30, targetCameraDistance - zoomSpeed);
+                        cameraDistance = targetCameraDistance;
+                    }
+                    break;
+                case 's': 
+                    if (trackingPlanet) {
+                        targetCameraDistance = Math.min(50, targetCameraDistance + 2);
+                    } else {
+                        targetCameraDistance = Math.min(800, targetCameraDistance + zoomSpeed);
+                        cameraDistance = targetCameraDistance;
+                    }
+                    break;
+                case 'a': 
+                    cameraAngleY -= 0.05; 
+                    break;
+                case 'd': 
+                    cameraAngleY += 0.05; 
+                    break;
+                
+                // QE - Vertical movement (disabled when tracking a planet)
+                case 'q': 
+                    if (!trackingPlanet) cameraOffsetY -= panSpeed; 
+                    break;
+                case 'e': 
+                    if (!trackingPlanet) cameraOffsetY += panSpeed; 
+                    break;
+                
+                // R - Reset camera
+                case 'r':
+                    cameraDistance = 55;
+                    cameraAngleX = 0.4;
+                    cameraAngleY = 0;
+                    cameraOffsetX = 0;
+                    cameraOffsetY = 0;
+                    break;
             }
         });
 
@@ -1006,7 +2314,7 @@
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         }
 
-        function renderCelestialBody(modelMatrix, color, isEmissive, glow) {
+        function renderCelestialBody(modelMatrix, color, isEmissive, glow, textureName, isEarth = false, isRing = false) {
             const normalMatrix = mat4.create();
             mat4.invert(normalMatrix, modelMatrix);
             mat4.transpose(normalMatrix, normalMatrix);
@@ -1017,7 +2325,66 @@
             gl.uniform1i(uniforms.isEmissive, isEmissive);
             gl.uniform1f(uniforms.glow, glow);
             
-            gl.drawElements(gl.TRIANGLES, sphere.indices.length, gl.UNSIGNED_SHORT, 0);
+            // Ensure correct buffers are bound
+            if (!isRing) {
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                gl.enableVertexAttribArray(attrs.position);
+                gl.vertexAttribPointer(attrs.position, 3, gl.FLOAT, false, 0, 0);
+                
+                gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+                gl.enableVertexAttribArray(attrs.normal);
+                gl.vertexAttribPointer(attrs.normal, 3, gl.FLOAT, false, 0, 0);
+                
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            }
+            
+            // Bind texture coordinate buffer
+            gl.bindBuffer(gl.ARRAY_BUFFER, isRing ? ringTexCoordBuffer : texCoordBuffer);
+            gl.enableVertexAttribArray(attrs.texCoord);
+            gl.vertexAttribPointer(attrs.texCoord, 2, gl.FLOAT, false, 0, 0);
+            
+            // Handle textures
+            if (textureName) {
+                // Check if texture exists (special case for Earth which has multiple textures)
+                const hasValidTexture = isEarth || (textures[textureName] !== undefined);
+                
+                if (hasValidTexture) {
+                    gl.uniform1i(uniforms.hasTexture, true);
+                    gl.uniform1i(uniforms.isEarth, isEarth);
+                    gl.uniform1i(uniforms.isRing, isRing);
+                    
+                    if (isEarth) {
+                        // Earth: Bind day, night, and cloud textures to separate texture units
+                        gl.activeTexture(gl.TEXTURE0);
+                        gl.bindTexture(gl.TEXTURE_2D, textures.earthDay);
+                        gl.uniform1i(uniforms.earthDay, 0);
+                        
+                        gl.activeTexture(gl.TEXTURE1);
+                        gl.bindTexture(gl.TEXTURE_2D, textures.earthNight);
+                        gl.uniform1i(uniforms.earthNight, 1);
+                        
+                        gl.activeTexture(gl.TEXTURE2);
+                        gl.bindTexture(gl.TEXTURE_2D, textures.earthClouds);
+                        gl.uniform1i(uniforms.earthClouds, 2);
+                    } else {
+                        // Regular texture
+                        gl.activeTexture(gl.TEXTURE0);
+                        gl.bindTexture(gl.TEXTURE_2D, textures[textureName]);
+                        gl.uniform1i(uniforms.texture, 0);
+                    }
+                } else {
+                    gl.uniform1i(uniforms.hasTexture, false);
+                    gl.uniform1i(uniforms.isEarth, false);
+                    gl.uniform1i(uniforms.isRing, false);
+                }
+            } else {
+                gl.uniform1i(uniforms.hasTexture, false);
+                gl.uniform1i(uniforms.isEarth, false);
+                gl.uniform1i(uniforms.isRing, false);
+            }
+            
+            const indexCount = isRing ? ring.indices.length : sphere.indices.length;
+            gl.drawElements(gl.TRIANGLES, indexCount, gl.UNSIGNED_SHORT, 0);
         }
 
         function renderScene(viewMatrix, projectionMatrix, galacticOffset, time) {
@@ -1075,6 +2442,10 @@
             gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
             gl.enableVertexAttribArray(attrs.normal);
             gl.vertexAttribPointer(attrs.normal, 3, gl.FLOAT, false, 0, 0);
+            
+            gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+            gl.enableVertexAttribArray(attrs.texCoord);
+            gl.vertexAttribPointer(attrs.texCoord, 2, gl.FLOAT, false, 0, 0);
             
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
             
@@ -1142,6 +2513,14 @@
                     }
                 }
                 
+                // Store ALL planet positions for camera tracking
+                planetPositions[planet.name] = [...planetPosition];
+                
+                // Update tracked planet position
+                if (trackingPlanet === planet.name) {
+                    trackedPlanetPosition = [...planetPosition];
+                }
+                
                 // Planetary rotation (spin on axis)
                 const rotationAngle = time * planet.rotationSpeed;
                 mat4.rotateY(modelMatrix, modelMatrix, rotationAngle);
@@ -1149,8 +2528,23 @@
                 // Scale
                 mat4.scale(modelMatrix, modelMatrix, [planet.radius, planet.radius, planet.radius]);
                 
-                // Render planet
-                renderCelestialBody(modelMatrix, planet.color, planet.emissive, planet.glow);
+                // Debug Earth rendering once
+                if (planet.name === 'Earth' && !earthDebugLogged) {
+                    console.log('🌍 Earth rendering info:', {
+                        texture: planet.texture,
+                        isEarth: planet.isEarth,
+                        rotationAngle: rotationAngle,
+                        rotationSpeed: planet.rotationSpeed,
+                        hasEarthDay: !!textures.earthDay,
+                        hasEarthNight: !!textures.earthNight,
+                        hasEarthClouds: !!textures.earthClouds
+                    });
+                    earthDebugLogged = true;
+                }
+                
+                // Render planet with texture
+                renderCelestialBody(modelMatrix, planet.color, planet.emissive, planet.glow, 
+                    planet.texture, planet.isEarth || false, false);
                 
                 // Render planetary rings if they exist
                 if (planet.rings) {
@@ -1203,17 +2597,27 @@
                     // Calculate normal matrix for ring
                     const ringNormalMatrix = mat4.create();
                     mat4.invert(ringNormalMatrix, ringMatrix);
-                    mat4.transpose(ringNormalMatrix, ringNormalMatrix);
+                    mat4.transpose(ringNormalMatrix, ringMatrix);
+                    
+                    // Bind ring texture coordinates
+                    gl.bindBuffer(gl.ARRAY_BUFFER, ringTexCoordBuffer);
+                    gl.enableVertexAttribArray(attrs.texCoord);
+                    gl.vertexAttribPointer(attrs.texCoord, 2, gl.FLOAT, false, 0, 0);
                     
                     // Set uniforms for ring
                     gl.uniformMatrix4fv(uniforms.modelMatrix, false, ringMatrix);
                     gl.uniformMatrix4fv(uniforms.normalMatrix, false, ringNormalMatrix);
-                    
-                    // Ring color with transparency
-                    const ringColor = [...planet.rings.color];
-                    gl.uniform3fv(uniforms.color, ringColor);
+                    gl.uniform3fv(uniforms.color, planet.rings.color);
                     gl.uniform1i(uniforms.isEmissive, false);
                     gl.uniform1f(uniforms.glow, planet.rings.opacity);
+                    gl.uniform1i(uniforms.isRing, true);
+                    gl.uniform1i(uniforms.hasTexture, true);
+                    gl.uniform1i(uniforms.isEarth, false);
+                    
+                    // Bind ring texture with alpha
+                    gl.activeTexture(gl.TEXTURE0);
+                    gl.bindTexture(gl.TEXTURE_2D, textures[planet.rings.texture]);
+                    gl.uniform1i(uniforms.texture, 0);
                     
                     // Draw ring
                     gl.drawElements(gl.TRIANGLES, ring.indices.length, gl.UNSIGNED_SHORT, 0);
@@ -1251,10 +2655,55 @@
                     // Scale
                     mat4.scale(moonMatrix, moonMatrix, [moon.radius, moon.radius, moon.radius]);
                     
-                    // Render moon
-                    renderCelestialBody(moonMatrix, moon.color, false, 1.0);
+                    // Render moon with texture
+                    renderCelestialBody(moonMatrix, moon.color, false, 1.0, moon.texture, false, false);
                 });
             });
+            
+            // ===== RENDER SUN CORONA (Flames) =====
+            gl.useProgram(coronaProgram);
+            
+            // Enable blending for transparent corona
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE);  // Additive blending for glow
+            gl.depthMask(false);  // Don't write to depth buffer
+            
+            // Corona model matrix - positioned at sun with larger scale
+            const sunRadius = 8.0;  // Match sun's radius
+            const coronaScale = sunRadius * 1.8;  // Corona extends beyond sun
+            
+            const coronaMatrix = mat4.create();
+            mat4.identity(coronaMatrix);
+            mat4.translate(coronaMatrix, coronaMatrix, galacticOffset);  // Sun is at galactic center
+            mat4.scale(coronaMatrix, coronaMatrix, [coronaScale, coronaScale, coronaScale]);
+            
+            // Set uniforms
+            gl.uniformMatrix4fv(uniforms.coronaModel, false, coronaMatrix);
+            gl.uniformMatrix4fv(uniforms.coronaView, false, viewMatrix);
+            gl.uniformMatrix4fv(uniforms.coronaProj, false, projectionMatrix);
+            gl.uniform1f(uniforms.coronaTime, time);
+            gl.uniform3fv(uniforms.coronaSunCenter, galacticOffset);
+            gl.uniform1f(uniforms.coronaSunRadius, sunRadius);
+            
+            // Get camera position for the corona shader
+            const camPos = [
+                cameraOffsetX + cameraDistance * Math.cos(cameraAngleX) * Math.sin(cameraAngleY),
+                cameraOffsetY + cameraDistance * Math.sin(cameraAngleX),
+                galacticOffset[2] + cameraDistance * Math.cos(cameraAngleX) * Math.cos(cameraAngleY)
+            ];
+            gl.uniform3fv(uniforms.coronaCamera, camPos);
+            
+            // Bind corona geometry
+            gl.bindBuffer(gl.ARRAY_BUFFER, coronaPositionBuffer);
+            gl.enableVertexAttribArray(coronaPositionAttr);
+            gl.vertexAttribPointer(coronaPositionAttr, 3, gl.FLOAT, false, 0, 0);
+            
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, coronaIndexBuffer);
+            gl.drawElements(gl.TRIANGLES, coronaSphere.indices.length, gl.UNSIGNED_SHORT, 0);
+            
+            // Restore state
+            gl.depthMask(true);
+            gl.disable(gl.BLEND);
         }
 
         // ===== Orbital Trail System =====
@@ -1265,6 +2714,9 @@
         planets.forEach((planet, idx) => {
             trailHistory.set(idx, []);
         });
+        
+        // Debug flag to log Earth rendering only once
+        let earthDebugLogged = false;
         
         // ===== Main Render Loop =====
         let time = 0;
@@ -1277,7 +2729,7 @@
             time += 0.01 * speedMultiplier;
             
             // Forward motion through space - solar system moves along Z-axis
-            const forwardMotion = time * 3.0; // Move forward continuously
+            const forwardMotion = time * 8.0; // Move forward continuously (scaled for realistic distances)
             const galacticOffset = [
                 0, // No X drift
                 0, // No Y drift  
@@ -1285,19 +2737,54 @@
             ];
             
             // Camera setup - follow the solar system's forward motion
-            const cameraX = cameraOffsetX + cameraDistance * Math.cos(cameraAngleX) * Math.sin(cameraAngleY);
-            const cameraY = cameraOffsetY + cameraDistance * Math.sin(cameraAngleX);
-            const cameraZ = forwardMotion + cameraDistance * Math.cos(cameraAngleX) * Math.cos(cameraAngleY);
+            
+            let lookAtTarget = [cameraOffsetX, cameraOffsetY, forwardMotion];
+            let cameraX, cameraY, cameraZ;
+            
+            if (trackingPlanet && trackedPlanetPosition[0] !== undefined) {
+                // PLANET TRACKING MODE
+                // Very smooth but responsive interpolation
+                const lerpFactor = 0.12;
+                
+                // Update target offsets to tracked planet's position
+                targetOffsetX = trackedPlanetPosition[0];
+                targetOffsetY = trackedPlanetPosition[1];
+                
+                // Smoothly move camera offsets to planet
+                cameraOffsetX += (targetOffsetX - cameraOffsetX) * lerpFactor;
+                cameraOffsetY += (targetOffsetY - cameraOffsetY) * lerpFactor;
+                
+                // Smoothly zoom to target distance
+                cameraDistance += (targetCameraDistance - cameraDistance) * lerpFactor;
+                
+                // Camera orbits around tracked planet's 3D position
+                cameraX = trackedPlanetPosition[0] + cameraDistance * Math.cos(cameraAngleX) * Math.sin(cameraAngleY);
+                cameraY = trackedPlanetPosition[1] + cameraDistance * Math.sin(cameraAngleX);
+                cameraZ = trackedPlanetPosition[2] + cameraDistance * Math.cos(cameraAngleX) * Math.cos(cameraAngleY);
+                
+                // Look directly AT the planet's exact position
+                lookAtTarget = [trackedPlanetPosition[0], trackedPlanetPosition[1], trackedPlanetPosition[2]];
+            } else {
+                // OVERVIEW MODE - No interpolation, direct control
+                cameraDistance = targetCameraDistance;
+                
+                // Camera orbits around solar system center
+                cameraX = cameraOffsetX + cameraDistance * Math.cos(cameraAngleX) * Math.sin(cameraAngleY);
+                cameraY = cameraOffsetY + cameraDistance * Math.sin(cameraAngleX);
+                cameraZ = forwardMotion + cameraDistance * Math.cos(cameraAngleX) * Math.cos(cameraAngleY);
+                
+                // Look at solar system center
+                lookAtTarget = [cameraOffsetX, cameraOffsetY, forwardMotion];
+            }
             
             const viewMatrix = mat4.create();
-            // Camera looks at the center of the solar system which is also moving forward
             mat4.lookAt(viewMatrix, 
                 [cameraX, cameraY, cameraZ], 
-                [cameraOffsetX, cameraOffsetY, forwardMotion], 
+                lookAtTarget, 
                 [0, 1, 0]);
             
             const projectionMatrix = mat4.create();
-            mat4.perspective(projectionMatrix, Math.PI / 4, canvas.width / canvas.height, 0.1, 1000);
+            mat4.perspective(projectionMatrix, Math.PI / 4, canvas.width / canvas.height, 0.1, 2000);
             
             // ===== RENDER TO SCENE FRAMEBUFFER =====
             gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffers.scene.framebuffer);
@@ -1306,9 +2793,33 @@
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             gl.enable(gl.DEPTH_TEST);
             
-            // Render stars
-            gl.useProgram(starProgram);
+            // Render skybox first (background)
+            gl.useProgram(skyboxProgram);
             gl.disable(gl.DEPTH_TEST);
+            gl.depthMask(false);  // Don't write to depth buffer
+            
+            gl.uniformMatrix4fv(uniforms.skyboxView, false, viewMatrix);
+            gl.uniformMatrix4fv(uniforms.skyboxProj, false, projectionMatrix);
+            
+            // Bind skybox texture
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, textures.starSkybox);
+            gl.uniform1i(uniforms.skyboxTexture, 0);
+            
+            // Bind skybox buffers
+            gl.bindBuffer(gl.ARRAY_BUFFER, skyboxPositionBuffer);
+            gl.enableVertexAttribArray(attrs.skyboxPosition);
+            gl.vertexAttribPointer(attrs.skyboxPosition, 3, gl.FLOAT, false, 0, 0);
+            
+            gl.bindBuffer(gl.ARRAY_BUFFER, skyboxTexCoordBuffer);
+            gl.enableVertexAttribArray(attrs.skyboxTexCoord);
+            gl.vertexAttribPointer(attrs.skyboxTexCoord, 2, gl.FLOAT, false, 0, 0);
+            
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, skyboxIndexBuffer);
+            gl.drawElements(gl.TRIANGLES, skyboxSphere.indices.length, gl.UNSIGNED_SHORT, 0);
+            
+            // Render additional point stars for sparkle
+            gl.useProgram(starProgram);
             
             gl.uniformMatrix4fv(uniforms.starView, false, viewMatrix);
             gl.uniformMatrix4fv(uniforms.starProj, false, projectionMatrix);
@@ -1325,6 +2836,7 @@
             
             // Render planets and moons
             gl.enable(gl.DEPTH_TEST);
+            gl.depthMask(true);  // Re-enable depth writing
             renderScene(viewMatrix, projectionMatrix, galacticOffset, time);
             
             // ===== BLOOM POST-PROCESSING =====
