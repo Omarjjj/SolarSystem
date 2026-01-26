@@ -1,0 +1,571 @@
+/* Minimal reset to keep canvas/UI layout consistent across browsers. */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        /* Fullscreen, no-scroll page with sci-fi typography. */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Rajdhani', sans-serif;
+        }
+        
+        /* WebGL canvas fills the viewport. */
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        /* Futuristic HUD Container */
+        /* Base HUD panel style: glassy card with neon border and soft depth. */
+        .hud-panel {
+            position: absolute;
+            background: linear-gradient(135deg, 
+                rgba(10, 15, 40, 0.85) 0%, 
+                rgba(20, 30, 60, 0.85) 50%,
+                rgba(15, 25, 50, 0.85) 100%);
+            backdrop-filter: blur(15px) saturate(180%);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.8),
+                inset 0 1px 1px rgba(255, 255, 255, 0.1),
+                0 0 20px rgba(0, 150, 255, 0.2);
+            border-radius: 15px;
+            color: #e8f4ff;
+            animation: panelSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: all 0.3s ease;
+        }
+        
+        /* Hover state intensifies border glow and depth. */
+        .hud-panel:hover {
+            border-color: rgba(0, 200, 255, 0.6);
+            box-shadow: 
+                0 12px 48px rgba(0, 0, 0, 0.9),
+                inset 0 1px 1px rgba(255, 255, 255, 0.15),
+                0 0 30px rgba(0, 150, 255, 0.4);
+        }
+        
+        /* Slide-in animation: start transparent and slightly above, end fully visible at rest. */
+        /* Fade in and slide down when panels first appear. */
+        @keyframes panelSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* nimates the text-shadow from a softer glow to a stronger glow and back, giving neon text a gentle pulse. */
+        @keyframes neonPulse {
+            0%, 100% { text-shadow: 0 0 10px rgba(0, 200, 255, 0.8), 0 0 20px rgba(0, 150, 255, 0.4); }
+            50% { text-shadow: 0 0 20px rgba(0, 200, 255, 1), 0 0 30px rgba(0, 150, 255, 0.6); }
+        }
+        
+        /* make panels/buttons feel like they’re breathing with light. */
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 200, 255, 0.3), inset 0 0 10px rgba(0, 200, 255, 0.1); }
+            50% { box-shadow: 0 0 20px rgba(0, 200, 255, 0.5), inset 0 0 15px rgba(0, 200, 255, 0.2); }
+        }
+        
+        /* Utility class to hide panels without removing them from the DOM. */
+        .hidden {
+            opacity: 0 !important;
+            pointer-events: none;
+            transform: translateY(-30px) !important;
+        }
+        
+        /* Futuristic Toggle Buttons */
+        .toggle-btn {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, rgba(0, 200, 255, 0.2), rgba(0, 100, 200, 0.2));
+            border: 2px solid rgba(0, 200, 255, 0.5);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            backdrop-filter: blur(10px);
+            box-shadow: 
+                0 5px 20px rgba(0, 0, 0, 0.5),
+                0 0 15px rgba(0, 200, 255, 0.3);
+            animation: glowPulse 2s ease-in-out infinite;
+            z-index: 1000;
+        }
+        
+        .toggle-btn:hover {
+            transform: scale(1.15) rotate(90deg);
+            border-color: rgba(0, 255, 200, 0.8);
+            background: linear-gradient(135deg, rgba(0, 255, 200, 0.3), rgba(0, 150, 255, 0.3));
+            box-shadow: 
+                0 8px 30px rgba(0, 0, 0, 0.7),
+                0 0 30px rgba(0, 255, 200, 0.6);
+        }
+        
+        .toggle-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .toggle-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: #00d4ff;
+            filter: drop-shadow(0 0 5px rgba(0, 200, 255, 0.8));
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-btn:hover svg {
+            fill: #00ff88;
+            filter: drop-shadow(0 0 10px rgba(0, 255, 136, 1));
+        }
+        
+        #toggleInfo {
+            top: 20px;
+            left: 380px;
+        }
+        
+        #toggleControls {
+            top: 20px;
+            right: 330px;
+        }
+        
+        #toggleCopyright {
+            bottom: 20px;
+            right: 350px;
+        }
+        
+        #hudToggle {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, rgba(255, 0, 100, 0.3), rgba(200, 0, 255, 0.3));
+            border: 3px solid rgba(255, 0, 200, 0.6);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 12px;
+            color: #ff00ff;
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.8);
+            animation: glowPulse 2s ease-in-out infinite;
+        }
+        
+        #hudToggle:hover {
+            transform: translateY(-50%) scale(1.2);
+            background: linear-gradient(135deg, rgba(255, 0, 100, 0.5), rgba(200, 0, 255, 0.5));
+            border-color: rgba(255, 0, 200, 1);
+            box-shadow: 
+                0 10px 40px rgba(0, 0, 0, 0.8),
+                0 0 40px rgba(255, 0, 200, 0.8);
+        }
+        
+        /* Planet Tracker Dropdown */
+        #planetTracker {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1000;
+        }
+        
+        #planetSelect {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, rgba(0, 50, 100, 0.8), rgba(0, 100, 150, 0.6));
+            border: 2px solid rgba(0, 200, 255, 0.6);
+            border-radius: 15px;
+            color: #00ffcc;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            backdrop-filter: blur(15px);
+            box-shadow: 
+                0 5px 25px rgba(0, 0, 0, 0.6),
+                0 0 15px rgba(0, 200, 255, 0.3);
+            transition: all 0.3s ease;
+            outline: none;
+            min-width: 180px;
+        }
+        
+        #planetSelect:hover {
+            border-color: rgba(0, 255, 200, 1);
+            box-shadow: 
+                0 8px 35px rgba(0, 0, 0, 0.8),
+                0 0 30px rgba(0, 255, 200, 0.5);
+        }
+        
+        #planetSelect option {
+            background: #001a33;
+            color: #00ffcc;
+            padding: 10px;
+        }
+        
+        #trackingStatus {
+            padding: 8px 15px;
+            background: linear-gradient(135deg, rgba(0, 100, 50, 0.6), rgba(0, 150, 100, 0.4));
+            border: 1px solid rgba(0, 255, 100, 0.4);
+            border-radius: 10px;
+            color: #00ff88;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        #trackingStatus.tracking {
+            background: linear-gradient(135deg, rgba(255, 100, 0, 0.6), rgba(255, 150, 50, 0.4));
+            border-color: rgba(255, 200, 0, 0.6);
+            color: #ffcc00;
+            animation: glowPulse 1.5s ease-in-out infinite;
+        }
+        
+        /* Loading Screen */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #000428 0%, #004e92 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        
+        #loadingScreen.loaded {
+            opacity: 0;
+            transform: scale(1.1);
+            pointer-events: none;
+        }
+        
+        .loader {
+            width: 100px;
+            height: 100px;
+            border: 4px solid rgba(0, 200, 255, 0.1);
+            border-top: 4px solid #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            box-shadow: 0 0 40px rgba(0, 200, 255, 0.5);
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #loadingScreen h2 {
+            margin-top: 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            color: #00d4ff;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            animation: neonPulse 2s ease-in-out infinite;
+        }
+        
+        #loadingScreen p {
+            margin-top: 15px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            color: #66b3ff;
+            letter-spacing: 2px;
+        }
+        
+        #loadingProgress {
+            margin-top: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: #00ff88;
+        }
+        
+        /* Futuristic Corner Decorations */
+        .hud-panel::before,
+        .hud-panel::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #00d4ff;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+        
+        .hud-panel::before {
+            top: 10px;
+            left: 10px;
+            border-right: none;
+            border-bottom: none;
+        }
+        
+        .hud-panel::after {
+            bottom: 10px;
+            right: 10px;
+            border-left: none;
+            border-top: none;
+        }
+        
+        .hud-panel:hover::before,
+        .hud-panel:hover::after {
+            opacity: 1;
+            box-shadow: 0 0 10px rgba(0, 200, 255, 0.8);
+        }
+        
+        /* Scanline effect */
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(0, 200, 255, 0.3) 50%, 
+                transparent 100%);
+            animation: scanline 4s linear infinite;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        #info {
+            top: 20px;
+            left: 20px;
+            padding: 25px;
+            max-width: 340px;
+            font-size: 13px;
+        }
+        
+        #info h3 {
+            margin: 0 0 20px 0;
+            color: #00d4ff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 2px solid rgba(0, 200, 255, 0.4);
+            padding-bottom: 12px;
+            animation: neonPulse 3s ease-in-out infinite;
+        }
+        
+        #info h4 {
+            margin: 18px 0 10px 0;
+            color: #00d4ff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            padding-left: 15px;
+        }
+        
+        #info h4:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: #00d4ff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 200, 255, 0.8);
+        }
+        
+        #info p {
+            margin: 8px 0;
+            line-height: 1.7;
+            color: #c8e6ff;
+            font-size: 13px;
+            padding-left: 15px;
+            transition: all 0.2s ease;
+        }
+        
+        #info p:hover {
+            color: #fff;
+            padding-left: 20px;
+        }
+        
+        #info strong {
+            color: #00d4ff;
+            font-weight: 600;
+        }
+        #copyright {
+            bottom: 20px;
+            right: 20px;
+            padding: 25px;
+            text-align: right;
+            min-width: 300px;
+            font-size: 12px;
+        }
+        
+        #copyright h4 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            font-weight: 700;
+            color: #00d4ff;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border-bottom: 2px solid rgba(0, 200, 255, 0.4);
+            padding-bottom: 10px;
+        }
+        
+        #copyright p {
+            margin: 6px 0;
+            line-height: 1.6;
+            color: #c8e6ff;
+            font-size: 13px;
+        }
+        
+        #copyright .institution {
+            color: #00d4ff;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 8px 0;
+            text-shadow: 0 0 10px rgba(0, 200, 255, 0.5);
+        }
+        
+        #copyright .instructor {
+            color: #66e0ff;
+            font-style: italic;
+            font-size: 13px;
+            margin: 6px 0;
+        }
+        
+        #copyright strong {
+            color: #00d4ff;
+            font-family: 'Orbitron', sans-serif;
+        }
+        #controls {
+            top: 20px;
+            right: 20px;
+            padding: 25px;
+            min-width: 280px;
+            font-size: 13px;
+        }
+        
+        #controls h4 {
+            margin: 0 0 20px 0;
+            color: #00d4ff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border-bottom: 2px solid rgba(0, 200, 255, 0.4);
+            padding-bottom: 10px;
+            animation: neonPulse 3s ease-in-out infinite;
+        }
+        
+        .control-group {
+            margin: 18px 0;
+        }
+        
+        .control-label {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: #c8e6ff;
+            font-weight: 500;
+        }
+        
+        #speedValue {
+            color: #00ff88;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            text-shadow: 0 0 15px rgba(0, 255, 136, 0.8);
+            display: inline-block;
+            min-width: 60px;
+        }
+        
+        /* Custom Futuristic Slider */
+        #speedSlider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 10px;
+            background: linear-gradient(90deg, 
+                rgba(0, 100, 200, 0.3) 0%,
+                rgba(0, 200, 255, 0.3) 50%,
+                rgba(0, 255, 136, 0.3) 100%);
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        #speedSlider:hover {
+            background: linear-gradient(90deg, 
+                rgba(0, 100, 200, 0.5) 0%,
+                rgba(0, 200, 255, 0.5) 50%,
+                rgba(0, 255, 136, 0.5) 100%);
+            box-shadow: 
+                inset 0 2px 5px rgba(0, 0, 0, 0.5),
+                0 0 15px rgba(0, 200, 255, 0.3);
+        }
+        
+        #speedSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
+            cursor: pointer;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 0 20px rgba(0, 200, 255, 0.8),
+                0 4px 10px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease;
+        }
+        
+        #speedSlider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 
+                0 0 30px rgba(0, 200, 255, 1),
+                0 6px 15px rgba(0, 0, 0, 0.7);
+        }
+        
+        #speedSlider::-webkit-slider-thumb:active {
+            transform: scale(0.95);
+        }
+        
+        #speedSlider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
+            cursor: pointer;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 0 20px rgba(0, 200, 255, 0.8),
+                0 4px 10px rgba(0, 0, 0, 0.5);
+        }

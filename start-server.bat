@@ -1,14 +1,25 @@
 @echo off
+set "ROOT=%~dp0"
 echo ========================================
 echo   Solar System WebGL - Local Server
 echo ========================================
 echo.
 echo Starting local HTTP server...
-echo Open your browser to: http://localhost:8000
+echo Serving: %ROOT%
+echo Open your browser to: http://localhost:8000/
 echo Press Ctrl+C to stop the server
 echo.
 echo ========================================
 echo.
+
+if not exist "%ROOT%index.html" (
+    echo ERROR: %ROOT%index.html not found.
+    echo Check that the project exists and try again.
+    pause
+    exit /b 1
+)
+
+cd /d "%ROOT%"
 
 REM Try Python 3 first
 python -m http.server 8000 2>nul
